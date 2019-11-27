@@ -19,9 +19,11 @@ print("Total rows: {0}".format(len(df)))
 
 # See which headers are available
 print(list(df))
-df.head(4)
+print(df.head(4))
 
 pd.isnull(df).sum()
+
+df.plot(x='time (seconds since 1970-01-01 00:00:00)', y='Y Wind Speed (m/s)', kind='line')
 # plt.plot([1, 2, 3, 4])
 # plt.ylabel('some numbers')
 # plt.show(
