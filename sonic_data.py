@@ -52,28 +52,57 @@ def simple_wind_from_vector(u, v):
 
 
 # Load csv
-df = pd.read_csv("Sonic_processed_2019_11_06.csv", na_filter=False, low_memory=False)
+df = pd.read_csv("Sonic_processed_2019_11_05.csv", na_filter=False, low_memory=False)
 df['datetime'] = pd.to_datetime(df["time (seconds since 1970-01-01 00:00:00)"], unit='s', origin='unix')
 df = df.set_index('datetime')
 df = df.drop(columns=["time (seconds since 1970-01-01 00:00:00)"])
 
-#Resample
+
+# Resample
 df = df.resample('T').mean()
+
 
 # Get horizontal wind speed and wind direction
 df['Horizontal wind speed'] = df.apply(lambda row: np.sqrt(row['X Wind Speed (m/s)']**2+row['Y Wind Speed (m/s)']**2), axis=1)
 df['Wind direction'] = df.apply(lambda row: simple_wind_from_vector(row['X Wind Speed (m/s)'], row['Y Wind Speed (m/s)']), axis=1)
+
+
+ax = plt.gca()
+df['X Wind Speed (m/s)'].plot(kind='line', ax=ax)
+df['Y Wind Speed (m/s)'].plot(kind='line', ax=ax)
+df['Z Wind Speed (m/s)'].plot(kind='line', ax=ax)
+plt.title('Wind speed from sonic anemometer')
+plt.ylabel('Wind speed [m/s]')
+plt.legend(loc='best')
+# plt.savefig('SA_wind.png')
+plt.show()
+
+
+fig, axs = plt.subplots(2, 1, figsize=(15,20)) # 3x3 frame
+
+plt.subplot(211)
+plt.plot(df['Horizontal wind speed'])
+plt.title('Horizontal wind speed [m/s]')
+plt.ylabel('Wind speed [m/s]')
+
+plt.subplot(212)
+plt.plot(df['Wind direction'])
+plt.title('Wind direction')
+plt.ylabel('Degrees')
+
+plt.show()
+# cols = ['Horizontal wind speed', 'Wind direction']
+# axes = df[cols].plot(subplots=True, figsize=(11,9))
+# for ax in axes:
+#     ax.set_ylabel('Wind speed (m/s)')
+# plt.savefig('SA_uh_wd.png')
+# plt.show()
+
 
 # print(df)
 # Output the number of rows
 # print("Total rows: {0}".format(len(df)))
 # See which headers are available
 # print(list(df))
-print(df.head())
+# print(df.head())
 # print(pd.isnull(df).sum())
-
-cols = ['Horizontal wind speed', 'Wind direction']
-axes = df[cols].plot(subplots=True, figsize=(11,9))
-for ax in axes:
-    ax.set_ylabel('Wind speed (m/s)')
-plt.show()
