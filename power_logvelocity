@@ -1,0 +1,118 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Dec 11 09:52:36 2019
+
+@author: erikw
+"""
+
+import math as math
+import numpy as np
+import mathplotlib.pyplot as plt
+import pandas as pd
+
+#File read must be filled in so that raw data may be processed in this code.
+def simple_read_csv(path, header, cols):
+    """
+    Function to read a csv data file
+    
+    Parameters
+    ----------
+    path : str
+        path to data directory
+    header : int
+       number of header columns
+    cols : int
+        list of column number to be read
+
+    Results
+    -------
+    data : float
+        array of csv data
+    """
+    
+    data  = genfromtxt(path, delimiter=',', skip_header=header, usecols=cols)
+    return data
+
+#defining wind velocity components and time, from .csv file correct array numeration must be included here not filled in.
+t = data[:,0]
+u = data[:,]
+u_mean = data[:,]
+v = data[:,]
+v_mean = data[:,]
+w = data[:,]
+w_mean = data[:,]
+
+
+#Finding frictional windspeed this section will look into that.
+u_prim = u-u_mean
+return u_prim
+
+
+v_prim = v-v_mean
+return v_prim
+
+
+w_prim = w-w_mean
+return w_prim
+
+N=len(data[:,0])
+
+mean_uwprim = (1/N)*sum(u_prim * w_prim)
+
+return mean_uwprim
+
+mean_vwprim = (1/N)*sum(v_prim *w_prim)
+
+return mean_vwprim
+
+u_frict =np.sqrt(mean_uwprim + mean_vwprim)
+
+return u_frict
+
+#Obukov Length, factors are defined above
+k =0.4 # von karman constant
+g =9.81 # gravity constant
+theta_v=
+heat_flux=
+    
+L = (-u_frict**3*theta_v)/(k*g*heat_flux)
+    
+return L
+
+#logarithmic wind profile
+
+#value garnered from internet for roughness class 3, yields the roughness length as below for the terrain type at Ulven.
+z_0 =0.4
+
+#finding the stability function
+for z in range(1,0.5,100):
+    x = (1-16*z/L)**(1/4)
+    if z/L<0:
+        gamma_as=2*np.ln((1+x)/2)+np.ln((1+x**2)/2)-2*np.arctan(x+(math.pi)/2)
+    elif z/L>0:
+        gamma_as=-5*z/L
+    elif z/L=0:
+        gamma_as=0
+return gamma_as
+       
+gamma=-gamma_as(z/L)+gamma_as(z_0/L)
+
+velocityprofile = (u_frict/0.4)*(np.log(z/z_0)-gamma*(z/L))
+
+#plot of velocity along y-axis and height above ground level along x-axis.   
+plt.plot(z,velocityprofile)
+plt.xlabel('Height[m]')
+plt.ylabel('Velocity[m/s]')
+plt.show()
+
+#power curves are here y'all :)
+cp = 0.45
+d = 90
+A = (pi*90**2)/4
+p = 1.025
+power=0.5*A*cp*p*(np.sqrt((u**2)+(v**2)))**3
+
+plt.plot(t,power)
+plt.xlabel('Time[min]')
+plt.ylabel('Power[kW]')
+plt.show()
