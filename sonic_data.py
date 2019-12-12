@@ -112,11 +112,11 @@ def plot_wind(dataframe):
 # print(df.head())
 # print(pd.isnull(df).sum())
 
-directory = r'C:\Users\astri\.PyCharm2019.2\wind_meas\Sonic_processed'
-for entry in os.scandir(directory):
+directory1 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\Sonic_processed'
+directory2 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SP'
+for entry in os.scandir(directory1):
     df = load_csv(entry)
-    # print(df.dtypes)
+    #print(df.dtypes)
     df = resample_df(df)
     df = uh_wd(df)
-    filename = 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'
-    df.to_csv(os.path.join(directory, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
+    df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
