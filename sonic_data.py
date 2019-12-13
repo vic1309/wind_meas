@@ -13,7 +13,8 @@ import os
 
 def load_csv(file):
     dataframe = pd.read_csv(file, na_filter=False, low_memory=False)
-    dataframe['datetime'] = pd.to_datetime(dataframe["time (seconds since 1970-01-01 00:00:00)"], unit='s', origin='unix')
+    dataframe['datetime'] = pd.to_datetime(dataframe["time (seconds since 1970-01-01 00:00:00)"], unit='s',
+                                           origin='unix')
     dataframe = dataframe.set_index('datetime')
     dataframe = dataframe.drop(columns=["time (seconds since 1970-01-01 00:00:00)"])
     return dataframe
@@ -67,13 +68,26 @@ def simple_wind_from_vector(u, v):
 
 def uh_wd(dataframe):
     # Get horizontal wind speed and wind direction
-    dataframe['Horizontal wind speed'] = dataframe.apply(lambda row: np.sqrt(row['X Wind Speed (m/s)']**2+row['Y Wind Speed (m/s)']**2), axis=1)
-    dataframe['Wind direction'] = dataframe.apply(lambda row: simple_wind_from_vector(row['X Wind Speed (m/s)'], row['Y Wind Speed (m/s)']), axis=1)
+    dataframe['Horizontal wind speed'] = dataframe.apply(
+        lambda row: np.sqrt(row['X Wind Speed (m/s)'] ** 2 + row['Y Wind Speed (m/s)'] ** 2), axis=1)
+    dataframe['Wind direction'] = dataframe.apply(
+        lambda row: simple_wind_from_vector(row['X Wind Speed (m/s)'], row['Y Wind Speed (m/s)']), axis=1)
+    return dataframe
+
+
+def mean_wd(dataframe):
+    dataframe['Mean wind direction'] = dataframe['Wind direction'].rolling(10).mean()
+    dataframe['Theta'] = dataframe.apply(lambda row: (np.pi / 180) * (270 - row['Mean wind direction']), axis=1)
+    dataframe['U wind rotated'] = dataframe.apply(lambda row: row['X Wind Speed (m/s)'] * np.cos(row['Theta'])
+                                                              - row['Y Wind Speed (m/s)'] * np.sin(row['Theta']), axis=1)
+    dataframe['V wind rotated'] = dataframe.apply(lambda row: row['X Wind Speed (m/s)'] * np.sin(row['Theta'])
+                                                              + row['Y Wind Speed (m/s)'] * np.cos(row['Theta']), axis=1)
+    dataframe['Rotated wind direction'] = dataframe.apply(
+        lambda row: simple_wind_from_vector(row['U wind rotated'], row['V wind rotated']), axis=1)
     return dataframe
 
 
 def plot_wind(dataframe):
-
     ax = plt.gca()
     dataframe['X Wind Speed (m/s)'].plot(kind='line', ax=ax)
     dataframe['Y Wind Speed (m/s)'].plot(kind='line', ax=ax)
@@ -84,7 +98,7 @@ def plot_wind(dataframe):
     # plt.savefig('SA_wind.png')
     plt.show()
 
-    plt.subplots(2, 1, figsize=(15,20)) # 3x3 frame
+    plt.subplots(2, 1, figsize=(15, 20))  # 3x3 frame
     plt.subplot(211)
     plt.plot(dataframe['Horizontal wind speed'])
     plt.title('Horizontal wind speed [m/s]')
@@ -116,7 +130,20 @@ directory1 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\Sonic_processed'
 directory2 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SP'
 for entry in os.scandir(directory1):
     df = load_csv(entry)
-    #print(df.dtypes)
+    # print(df.dtypes)
     df = resample_df(df)
     df = uh_wd(df)
-    df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
+    plot_wind(df)
+    ax = plt.subplot(326, polar=True)
+    ax.scatter(df['Wind direction'], df['Horizontal wind speed'] , c=df['Horizontal wind speed'], s=1)
+    plt.show()
+    # df = mean_wd(df)
+
+    # plt.quiver(df['U wind rotated'], df['V wind rotated'], color='r')  # Plot the rotated vectors
+    # plt.quiver(df['X Wind Speed (m/s)'], df['Y Wind Speed (m/s)'])  # plot the non-rotated one
+    # plt.show()
+    #
+    # plt.plot(df['Theta'])
+    # plt.show()
+
+    #df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
