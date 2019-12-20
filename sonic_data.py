@@ -125,6 +125,7 @@ def plot_wind(dataframe):
 
 directory1 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\Sonic_processed'
 directory2 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SP'
+directory3 = r'C:\Users\astri\.PyCharm2019.2\wind_meas'
 
 # for entry in os.scandir(directory1):
 #     df = load_csv(entry)
@@ -148,4 +149,4 @@ directory2 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SP'
     #df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
 
 result_obj = pd.concat([pd.read_csv(entry) for entry in os.scandir(directory2)])
-result_obj.to_csv(os.path.join(directory2, 'SPcombined.csv'))
+result_obj.to_csv(os.path.join(directory3, 'SPcombined.csv'))

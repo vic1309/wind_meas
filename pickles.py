@@ -10,30 +10,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-sonic = r'C:\Users\astri\.PyCharm2019.2\wind_meas\pickled_data\sonic_mer_res.pkl'
+sonic = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SPcombined.csv'
 station = r'C:\Users\astri\.PyCharm2019.2\wind_meas\pickled_data\wsd.pkl'
-s_df = pd.read_pickle(sonic)
+s_df = pd.read_csv(sonic)
 w_df = pd.read_pickle(station)
 
-s_df['datetime'] = pd.to_datetime(s_df["time"], unit='s',
-                                       origin='unix')
 s_df = s_df.set_index('datetime')
-s_df = s_df.drop(columns=["time"])
+s_df = s_df.drop(columns=['Unnamed: 0'])
+
+print(s_df.head())
 
 w_df['datetime'] = pd.to_datetime(w_df["time"], unit='s',
                                        origin='unix')
 w_df = w_df.set_index('datetime')
 w_df = w_df.drop(columns=["time"])
+print(w_df.head())
 
 w_df = w_df.shift(-65, axis=0, freq='1T')
 
-
-
-s_df['Uh'] = s_df.apply(
-        lambda row: np.sqrt(row['x_vel'] ** 2 + row['y_vel'] ** 2), axis=1)
-
 ax = plt.gca()
-s_df['Uh'].plot(kind='line', ax=ax)
+s_df['Horizontal wind speed'].plot(kind='line', ax=ax)
 w_df['wspd'].plot(kind='line', ax=ax)
 plt.legend(loc='best')
 plt.show()
@@ -56,5 +52,4 @@ plt.show()
 # plt.legend(loc='best')
 # plt.show()
 
-print(s_df.head())
-print(test_wdf.head())
+
