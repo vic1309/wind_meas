@@ -12,20 +12,12 @@ import os
 
 
 def load_csv(file):
-    dataframe = pd.read_csv(file, na_filter=False, low_memory=False, dtype={'X Wind Speed (m/s)': float,
-                                                                            'Y Wind Speed (m/s)': float,
-                                                                            'Z Wind Speed (m/s)': float,
-                                                                            'Temperature (deg C)': float})
+    dataframe = pd.read_csv(file, na_filter=False, low_memory=False)
+    dataframe = dataframe.apply(pd.to_numeric, errors='coerce')
     dataframe['datetime'] = pd.to_datetime(dataframe["time (seconds since 1970-01-01 00:00:00)"], unit='s',
                                            origin='unix')
     dataframe = dataframe.set_index('datetime')
     dataframe = dataframe.drop(columns=["time (seconds since 1970-01-01 00:00:00)"])
-    return dataframe
-
-
-def resample_df(dataframe):
-    # Resample
-    dataframe = dataframe.resample('T').mean()
     return dataframe
 
 
@@ -133,12 +125,14 @@ def plot_wind(dataframe):
 
 directory1 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\Sonic_processed'
 directory2 = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SP'
-for entry in os.scandir(directory1):
-    df = load_csv(entry)
-    print(df.dtypes)
-    print(df.head())
-    # df = resample_df(df)
-    # df = uh_wd(df)
+
+# for entry in os.scandir(directory1):
+#     df = load_csv(entry)
+#     df = df.resample('T').mean()
+#     # print(df.dtypes)
+#     # print(df.head())
+#     df = uh_wd(df)
+
     # plot_wind(df)
     # ax = plt.subplot(326, polar=True)
     # ax.scatter(df['Wind direction'], df['Horizontal wind speed'] , c=df['Horizontal wind speed'], s=1)
@@ -148,8 +142,10 @@ for entry in os.scandir(directory1):
     # plt.quiver(df['U wind rotated'], df['V wind rotated'], color='r')  # Plot the rotated vectors
     # plt.quiver(df['X Wind Speed (m/s)'], df['Y Wind Speed (m/s)'])  # plot the non-rotated one
     # plt.show()
-    #
     # plt.plot(df['Theta'])
     # plt.show()
 
-    # df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
+    #df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
+
+result_obj = pd.concat([pd.read_csv(entry) for entry in os.scandir(directory2)])
+result_obj.to_csv(os.path.join(directory2, 'SPcombined.csv'))
