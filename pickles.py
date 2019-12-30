@@ -30,6 +30,7 @@ print(len(s_df.index))
 print(len(w_df.index))
 
 w_df = w_df.shift(-65, axis=0, freq='1T')
+w_df['v']= - w_df['v']
 
 ax = plt.gca()
 s_df['Horizontal wind speed'].plot(kind='line', ax=ax)
@@ -37,6 +38,8 @@ w_df['wspd'].plot(kind='line', ax=ax)
 plt.legend(loc='best')
 plt.show()
 
+
+plt.scatter(s_df['Horizontal wind speed'].loc['2019-11-06 00:00:00':'2019-11-07 23:59:00'], w_df['wspd'].loc['2019-11-06 00:00:00':'2019-11-07 23:59:00'])
 
 # ax = plt.gca()
 # s_df['x_vel'].plot(kind='line', ax=ax)

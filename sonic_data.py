@@ -156,7 +156,7 @@ directory3 = r'C:\Users\astri\.PyCharm2019.2\wind_meas'
 
     #df.to_csv(os.path.join(directory2, 'SP' + os.path.splitext(os.path.basename(entry))[0][-10:] + '.csv'))
 
-result_obj = pd.concat([main(entry) for entry in os.scandir(directory1)])
+result_obj = pd.concat([main(entry)[:-1] for entry in os.scandir(directory1)])
 # result_obj = result_obj.set_index('datetime')
 #result_obj.to_csv(os.path.join(directory3, 'SPcombined.csv'))
 result_obj.to_pickle('./sonic.pkl')
