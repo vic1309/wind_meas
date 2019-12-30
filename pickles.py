@@ -10,21 +10,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-sonic = r'C:\Users\astri\.PyCharm2019.2\wind_meas\SPcombined.csv'
+sonic = r'C:\Users\astri\.PyCharm2019.2\wind_meas\sonic.pkl'
 station = r'C:\Users\astri\.PyCharm2019.2\wind_meas\pickled_data\wsd.pkl'
-s_df = pd.read_csv(sonic)
+s_df = pd.read_pickle(sonic)
 w_df = pd.read_pickle(station)
 
-s_df = s_df.set_index('datetime')
-s_df = s_df.drop(columns=['Unnamed: 0'])
 
-print(s_df.head())
-
-w_df['datetime'] = pd.to_datetime(w_df["time"], unit='s',
-                                       origin='unix')
+w_df['datetime'] = pd.to_datetime(w_df["time"], unit='s', origin='unix')
 w_df = w_df.set_index('datetime')
 w_df = w_df.drop(columns=["time"])
+
 print(w_df.head())
+print(s_df.head())
+# print(s_df.dtypes)
+# print(w_df.dtypes)
+# print(s_df.isnull().sum())
+# print(w_df.isnull().sum())
+print(len(s_df.index))
+print(len(w_df.index))
 
 w_df = w_df.shift(-65, axis=0, freq='1T')
 
