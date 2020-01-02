@@ -132,6 +132,8 @@ w_df['wdir'] = w_df.apply(lambda row: rot_aws(row['wdir']), axis=1)
 w_df['u'] = w_df.apply(lambda row: get_u(row['wspd'], row['wdir']), axis=1)
 w_df['v'] = w_df.apply(lambda row: get_v(row['wspd'], row['wdir']), axis=1)
 
+w_df.to_pickle('./rotated_aws.pkl')
+
 # Sonic data
 s_df = pd.read_pickle(sonic)
 
@@ -210,7 +212,9 @@ ax3 = plt.gca()
 s_df['wspd 120 m'].hist(ax=ax3)
 plt.show()
 
+
 plt.scatter(s_df['Horizontal wind speed'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:00'], w_df['wspd'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:00'])
+
 
 plt.scatter(s_df['Wind direction'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:00'], w_df['wdir'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:00'])
 #
