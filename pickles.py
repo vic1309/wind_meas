@@ -8,6 +8,7 @@ __email__ = "astrid.myren@student.uib.no"
 import pandas as pd
 import matplotlib.pyplot as plt
 from windrose import WindroseAxes
+from windrose import WindAxes
 import matplotlib
 import matplotlib.cm as cm
 import numpy as np
@@ -75,7 +76,7 @@ def power_law(z, u_ref, z_ref, alpha):
     return u
 
 
-def get_power_output(d, u_0, rho=1.3):
+def get_power_output(cp, d, u_0, rho=1.3, cut_in=3, rated=12, cut_out=25):
     """
     Estimate of power output from wind
 
@@ -104,14 +105,14 @@ def get_power_output(d, u_0, rho=1.3):
     # Estimate the Rotor Area from rotor diameter
     A = np.pi * (d / 2) ** 2
 
-    P = 0.5 * A * rho * u_0 ** 3/1000
+    P = 0.5 * cp * A * rho * u_0 ** 3
 
-    # # cut-in speed
-    # P[u_0 < cut_in] = 0
-    # # cut-out speed
-    # P[u_0 >= cut_out] = 0
-    # # rated speed
-    # P[(u_0 > rated) & (u_0 < 25)] = 0.5  * A * rho * rated ** 3
+    # cut-in speed
+    P[u_0 < cut_in] = 0
+    # cut-out speed
+    P[u_0 >= cut_out] = 0
+    # rated speed
+    P[(u_0 > rated) & (u_0 < 25)] = 0.5 * cp * A * rho * rated ** 3
 
     return P
 
@@ -132,7 +133,7 @@ w_df['wdir'] = w_df.apply(lambda row: rot_aws(row['wdir']), axis=1)
 w_df['u'] = w_df.apply(lambda row: get_u(row['wspd'], row['wdir']), axis=1)
 w_df['v'] = w_df.apply(lambda row: get_v(row['wspd'], row['wdir']), axis=1)
 
-w_df.to_pickle('./rotated_aws.pkl')
+#w_df.to_pickle('./rotated_aws.pkl')
 
 # Sonic data
 s_df = pd.read_pickle(sonic)
@@ -141,6 +142,35 @@ s_df['Wind direction'] = s_df.apply(lambda row: rot_sonic(row['Wind direction'])
 s_df = s_df.drop(columns=['X Wind Speed (m/s)', 'Y Wind Speed (m/s)'])
 s_df['u']= s_df.apply(lambda row: get_u(row['Horizontal wind speed'], row['Wind direction']), axis=1)
 s_df['v']= s_df.apply(lambda row: get_v(row['Horizontal wind speed'], row['Wind direction']), axis=1)
+
+# Get columns from AWS
+s_df['press'] = w_df['press']
+s_df['hum'] = w_df['hum']
+s_df['prec'] = w_df['prec']
+
+
+# Find potential temperature
+po = 100 #kPa
+s_df['theta'] = s_df['Temperature (deg C)']*(po/s_df['press'])**(0.286); # potential temperature
+
+
+
+n = 10 #10 min rolling mean
+s_df['u_mean'] = s_df['u'].rolling(n).mean()
+s_df['v_mean'] = s_df['v'].rolling(n).mean()
+s_df['w_mean'] = s_df['Z Wind Speed (m/s)'].rolling(n).mean()
+
+s_df['u prim'] = s_df['u'] - s_df['u_mean']
+s_df['v prim'] = s_df['v'] - s_df['v_mean']
+s_df['w prim'] = s_df['Z Wind Speed (m/s)'] - s_df['w_mean']
+
+
+s_df['uw prim'] = s_df['u prim']*s_df['w prim']
+s_df['uv prim'] = s_df['u prim']*s_df['v prim']
+s_df['vw prim'] = s_df['v prim']*s_df['w prim']
+
+
+
 
 # Power law
 alpha = 1/7
@@ -152,22 +182,6 @@ d = 90 #m
 s_df['Power'] = s_df.apply(lambda row: get_power_output(d, row['wspd 120 m']), axis=1)
 
 s_df['Max power'] = s_df['Power']*.59
-
-
-
-
-# n = 10 #10 min rolling mean
-# u_mean = s_df['u'].mean()
-# v_mean = s_df['v'].mean()
-# w_mean = s_df['Z Wind Speed (m/s)'].mean()
-#
-# s_df['u prim'] = s_df['u'] - u_mean
-# s_df['v prim'] = s_df['v'] - v_mean
-# s_df['w prim'] = s_df['Z Wind Speed (m/s)'] - w_mean
-#
-# s_df['uw prim']
-
-
 
 #w_df = w_df.shift(-65, axis=0, freq='1T')
 
@@ -193,24 +207,33 @@ plt.ylabel('Degrees from North')
 
 plt.show()
 
-s_df['Horizontal wind speed'].plot(kind='line', linewidth=2)
+s_df['Horizontal wind speed'].loc['2019-11-07 06:00:00':'2019-11-11 09:00:00'].plot(kind='line', linewidth=2)
+s_df['wspd 120 m'].loc['2019-11-07 06:00:00':'2019-11-11 09:00:00'].plot(kind='line', linewidth=2)
 plt.title('Sonic Anemometer: Horizontal wind speed (m/s)')
 plt.ylabel('Wind speed (m/s)')
 plt.show()
 
-
+s_df['wspd 120 m'].loc['2019-11-07 06:00:00':'2019-11-11 09:00:00'].plot(kind='line', linewidth=2)
+plt.title('Sonic Anemometer: Horizontal wind speed (m/s)')
+plt.ylabel('Wind speed (m/s)')
+plt.show()
 # Plot of available power in wind
 ax = plt.gca()
-s_df['Power'].plot(kind='line', ax=ax)
-s_df['Max power'].plot(kind='line', ax=ax)
+s_df['Power'].loc['2019-11-07 06:00:00':'2019-11-11 09:00:00'].plot(kind='line', ax=ax)
+s_df['Max power'].loc['2019-11-07 06:00:00':'2019-11-11 09:00:00'].plot(kind='line', ax=ax)
 plt.title('Sonic Anemometer: Power Output (kW)')
 plt.ylabel('Power (kW)')
 plt.legend(loc='best')
 plt.show()
 
 ax3 = plt.gca()
-s_df['wspd 120 m'].hist(ax=ax3)
+s_df['Horizontal wind speed'].hist(ax=ax3, density=True)
+#s_df['wspd 120 m'].hist(ax=ax3, density=True)
+plt.title('Sonic Anemometer: Histogram of Wind Speeds')
+plt.ylabel('Probability')
+plt.xlabel('Wind speed (m/s)')
 plt.show()
+
 
 
 plt.scatter(s_df['Horizontal wind speed'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:00'], w_df['wspd'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:00'])
@@ -241,12 +264,18 @@ plt.scatter(s_df['Wind direction'].loc['2019-11-05 00:00:00':'2019-11-10 23:59:0
 # plt.legend(loc='best')
 # plt.show()
 #
+ax = WindAxes.from_ax()
+bins = np.arange(0, 6 + 1, 0.5)
+bins = bins[1:]
+ax, params = ax.pdf(s_df['Horizontal wind speed'], bins=bins)
 
 ax = WindroseAxes.from_ax()
-ax.bar(s_df['Wind direction'], s_df['Horizontal wind speed'], normed=True, opening=0.8, edgecolor='white')
-ax.set_legend()
+ax.bar(s_df['Wind direction'], s_df['Horizontal wind speed'], bins=np.arange(0, 3, 0.5), normed=True, opening=0.8, edgecolor='white')
+plt.legend(loc=3, prop={'size': 20})
 
+ax1 = WindroseAxes.from_ax()
+ax1.bar(w_df['wdir'], w_df['wspd'], bins=np.arange(0, 3, 0.5), normed= True, opening=0.8, edgecolor='white')
+plt.legend(loc=3, prop={'size': 20})
 
-ax = WindroseAxes.from_ax()
-ax.bar(w_df['wdir'], w_df['wspd'], normed=True, opening=0.8, edgecolor='white')
-ax.set_legend()
+### Organize labels ###
+
